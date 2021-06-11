@@ -50,6 +50,7 @@ def getContours(img):
 
 # Warp the image and get a perspective transform on the biggest contour portion
 def getWarp(img, biggest):
+#    biggest = reorder(biggest)
     pts1 = np.float32(biggest)
     pts2 = np.float32([[0,0], [frameWidth, 0], [0, frameHeight], [frameWidth, frameHeight]])
 
@@ -57,6 +58,22 @@ def getWarp(img, biggest):
     imgOutput = cv2.warpPerspective(img, matrix, (frameWidth, frameHeight))
 
     return imgOutput
+
+# Reorders the warp points 
+def reorder(points):
+    points = points.reshape((4, 2))
+    newPoints = np.zeros((4, 1, 2), np.int32)
+
+    sum = points.sum(1)
+    diff = np.diff(points, axis=1)
+
+    newPoints[0] = points[np.argmin(sum)]
+    newPoints[1] = points[np.argmin(diff)]
+    newPoints[2] = points[np.argmax(diff)]
+    newPoints[3] = points[np.argmax(sum)]
+
+    return newPoints
+
 
 
 while cv2.waitKey(1) != 27:     # press ESC to break out
