@@ -1,16 +1,13 @@
 # Importing necessary libraries
 import cv2
 import numpy as np
+import requests
+import imutils
 
-# Setting up webcam
-frameWidth = 640
-frameHeight = 480
-
-src = cv2.VideoCapture(0)
-
-src.set(3, frameWidth)
-src.set(4, frameHeight)
-src.set(10, 130) 
+# Setting up IP webcam to connect to an Android phone 
+url = 'http://192.168.1.104:8080/shot.jpg'
+frameWidth = 1280
+frameHeight = 960
 
 def preprocessImage(img):
     # converting to grayscale
@@ -50,7 +47,7 @@ def getContours(img):
 
 # Warp the image and get a perspective transform on the biggest contour portion
 def getWarp(img, biggest):
-#    biggest = reorder(biggest)
+    biggest = reorder(biggest)
     pts1 = np.float32(biggest)
     pts2 = np.float32([[0,0], [frameWidth, 0], [0, frameHeight], [frameWidth, frameHeight]])
 
@@ -77,16 +74,21 @@ def reorder(points):
 
 
 while cv2.waitKey(1) != 27:     # press ESC to break out
-    _, frame = src.read()
-    frame = cv2.flip(frame, 1)      #flips the camera to work as a mirror
-    frameCnt = frame.copy()         # a copy to draw contours onto
+    img_resp = requests.get(url, verify=False)
+    img_arr = np.array(bytearray(img_resp.content), dtype=np.uint8)
+    frame = cv2.imdecode(img_arr, -1)
+    frame = imutils.resize(frame, width=frameWidth, height=frameHeight)
 
+    frameCnt = frame.copy()         # a copy to draw contours onto
     frame_pre = preprocessImage(frame)
     biggest = getContours(frame_pre)
 
-    frameWarped = getWarp(frame, biggest)
+    frameWarped = frameCnt
+
+    if(biggest.shape != (0,)):
+        frameWarped = getWarp(frame, biggest)
+        cv2.imwrite('scanned.jpg', frameWarped)
 
     cv2.imshow("Original", frameWarped)
 
-src.release()
 cv2.destroyAllWindows()
