@@ -3,11 +3,12 @@ import cv2
 import numpy as np
 import requests
 import imutils
+import os
 
 # Setting up IP webcam to connect to an Android phone 
 url = 'http://192.168.1.104:8080/shot.jpg'
-frameWidth = 1280
-frameHeight = 960
+frameWidth = 640   
+frameHeight = 480
 
 def preprocessImage(img):
     # converting to grayscale
