@@ -38,7 +38,7 @@ def getContours(img):
         area = cv2.contourArea(cnt)
 
         if area > 5000:
-            cv2.drawContours(img, cnt, -1, (255, 0, 0), 3)
+            cv2.drawContours(frameCnt, cnt, -1, (255, 0, 0), 3)
             perimeter = cv2.arcLength(cnt, True)
             approx = cv2.approxPolyDP(cnt, 0.02*perimeter, True)
 
@@ -48,16 +48,28 @@ def getContours(img):
     
     return biggest
 
+# Warp the image and get a perspective transform on the biggest contour portion
+def getWarp(img, biggest):
+    pts1 = np.float32(biggest)
+    pts2 = np.float32([[0,0], [frameWidth, 0], [0, frameHeight], [frameWidth, frameHeight]])
+
+    matrix = cv2.getPerspectiveTransform(pts1, pts2)
+    imgOutput = cv2.warpPerspective(img, matrix, (frameWidth, frameHeight))
+
+    return imgOutput
+
 
 while cv2.waitKey(1) != 27:     # press ESC to break out
     _, frame = src.read()
     frame = cv2.flip(frame, 1)      #flips the camera to work as a mirror
     frameCnt = frame.copy()         # a copy to draw contours onto
 
-    frame = preprocessImage(frame)
-    biggest = getContours(frame)
+    frame_pre = preprocessImage(frame)
+    biggest = getContours(frame_pre)
 
-    cv2.imshow("Original", frameCnt)
+    frameWarped = getWarp(frame, biggest)
+
+    cv2.imshow("Original", frameWarped)
 
 src.release()
 cv2.destroyAllWindows()
